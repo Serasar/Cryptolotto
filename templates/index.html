@@ -1,0 +1,247 @@
+{% extends 'core.html' %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% import "bootstrap/utils.html" as utils %}
+
+{% block title %}Cryptolotto{% endblock %}
+
+{% block scripts %}
+{{super()}}
+{% endblock %}
+
+
+{% block content %}
+<div class="container">
+<center><h1>Cryptolotto</h1></center>
+</div>
+<div class="container">
+      <div class="row">
+            <div class="col-sm-4">
+                <h4>Current round: {{ current_round }}</h4>
+                <h4>Total bank: {{ "{0:.8f}".format(total_bank) }} </h4>
+            </div>
+            <div class="col-sm-4">
+            {% if name %}
+            <h4><a href="{{url_for('.user', name=name)}}">Your account link</a><br>
+            Please save it, so you can access your account later.</h4>
+            {% else %}
+            <h4><a href="{{url_for('.create_user', name=name)}}">Create account</a>
+            {% endif %}
+
+            </div>
+            <div class="col-sm-4">
+                <h4>Current block: {{ current_block }}</h4>
+                <h4>Draw on block: {{ draw_on_block }}</h4>
+                <h4>{{ blocks_to_draw }} blocks to draw</h4>
+            </div>
+
+      </div>
+
+    <ul id="tabs-ul" class="nav nav-tabs" role="tablist">
+        <li><a data-toggle="tab" href="#info">Info</a></li>
+        <li><a data-toggle="tab" href="#chat">Chat</a></li>
+        <li><a data-toggle="tab" href="#account">Your account</a></li>
+        <li><a data-toggle="tab" href="#your_ticket">Your tickets</a></li>
+        <li><a data-toggle="tab" href="#all_ticket">All tickets</a></li>
+        <li><a data-toggle="tab" href="#your_ticket_prev">Your tickets from previous round</a></li>
+        <li><a data-toggle="tab" href="#all_ticket_prev">All tickets from previous round</a></li>
+        </li>
+    </ul>
+    <div class="tab-content">
+        <div id="info" class="tab-pane fade">
+        	<br>
+            <p>
+            This is cryptocurrency lottery. 
+            While it's main currency is Bitcoin, you can deposit and withdraw more than 20 cryptocurrencies thanks to shapeshift.io integration.</p>
+            <p>It have 9 winning tickets: 50%, 25%, 10%, 5%, 3%, 2%, 1%, 1%, 1%</p>
+            <p>Each ticket receive corresponding percent from round's total bank. 2% goes to lottery owner.</p>
+            <h4>Provably Fair</h4>
+            <p>Draw happens every 100 blocks in Bitcoin blockchain. When round is over system calculates ticket hashes according to following formula:</p>
+            <pre>sha256(winning_block_hash + ticket_number)</pre>
+           <p>The tickets with lowest hash value win.
+			</p>
+            <h4>Wide choice of payment methods and low ticket price.</h4>
+            <p>0.00000001 per ticket. This is cheapest ticket among cryptocurrency lotteries! Over 20 cryptocurrencies supported for deposit and withdrawal: Bitcoin, Litecoin, Dogecoin, Dash, and more!</p>
+
+
+        </div>
+        <div id="chat" class="tab-pane fade">
+<script id="cid0020000111518157281" data-cfasync="false" async src="//st.chatango.com/js/gz/emb.js" style="width: 250px;height: 350px;">{"handle":"cryptolottery","arch":"js","styles":{"b":100,"c":"000000","d":"000000","l":"FFFFFF","m":"FFFFFF","p":"10","r":100,"fwtickm":1}}</script>        </div>
+        <div id="account" class="tab-pane fade">
+            <p>
+                {% if name %}
+                            <div class="col-sm-4">
+
+            
+                    <h4>Balance: {{ ("{0:.8f}".format(balance)) }}</h4>
+                    <hr/>
+                    <h4>Deposit with BTC: 
+                    <h5><label class="control-label" for="deposit_addr">Address for deposit. Please deposit multiplier of 0.00000001 BTC.</label></h5>
+
+                    <input class="form-control" type="text" id="deposit_addr" value={{ address }} readonly></h4>
+                    <h4>Deposit with altcoins: <br><br>
+                     <script>function shapeshift_click(a,e){e.preventDefault();var link=a.href;window.open(link,'1418115287605','width=700,height=500,toolbar=0,menubar=0,location=0,status=1,scrollbars=1,resizable=0,left=0,top=0');return false;}</script> <a onclick="shapeshift_click(this, event);" href="https://shapeshift.io/shifty.html?destination={{ address }}&amp;output=BTC"><img src="https://shapeshift.io/images/shifty/xs_light_altcoins.png" class="ss-button"></a>
+</h4>
+                    <h4>Withdraw to Bitcoin: </h4>
+                    {{ wtf.quick_form(form_addr) }}
+                    <br>
+                        {%- with messages = get_flashed_messages(with_categories=True) %}
+                          {%- if messages %}
+                               {{utils.flashed_messages(messages)}}
+                          {%- endif %}
+                        {%- endwith %}
+                    <hr/>
+                    <h4>Withdraw to other cryptocurrency: </h4>
+                    {{ wtf.quick_form(form_addr_altcoin) }}
+                    <br>
+                        {%- with messages = get_flashed_messages(with_categories=True) %}
+                          {%- if messages %}
+                               {{utils.flashed_messages(messages)}}
+                          {%- endif %}
+                        {%- endwith %}
+                    </div>
+                {% else %}
+                    To view your account, please register.
+                {% endif %}
+            </p>
+        </div>
+        <div id="your_ticket" class="tab-pane fade">
+            <p>
+            {% if draw_on_block <= current_block + 1 %}
+                Wait until next round buy tickets.
+            {% else %}
+                {% if name %}
+                <div class="col-sm-4">
+                    <h4>Buy tickets:</h4>
+                    {{ wtf.quick_form(form_ticket) }}
+                    {% if free_ticket %}
+                        <h4>Free ticket:</h4>
+                        <p>You already have one free ticket.</p>
+                    {% else %}
+                        <h4>Free ticket:</h4>
+                        {{ wtf.quick_form(form_ticket_free) }}
+                    {% endif %}
+                    <br>
+                        {%- with messages = get_flashed_messages(with_categories=True) %}
+                          {%- if messages %}
+                               {{utils.flashed_messages(messages)}}
+                          {%- endif %}
+                        {%- endwith %}
+                    <hr/>
+                    <h4>Your total tickets for this round: {{ total_your_tickets }}</h4>
+                </div>
+                    <br>
+                    <table id="your_tickets_current" class="table table-striped table-condensed" cellspacing="0" width="80%">
+                        <thead>
+                            <tr>
+                                <th>Number</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                                {% for ticket in user_tickets.items %}
+                                <tr>
+                                    <td>{{ ticket.ticket_number }}</td>
+                                </tr>
+                                {% endfor %}
+                        </tbody>
+                    </table>
+                    <ul class="pagination pagination-lg">
+                        {% for page in user_tickets.iter_pages() %}
+                        <li><a href="{{url_for('.user', name=name)}}?user_curr_page={{ page }}">{{ page }}</a></li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>To view and buy tickets, please register.</p>
+                {% endif %}
+            {% endif %}
+            </p>
+        </div>
+        <div id="your_ticket_prev" class="tab-pane fade">
+            <h4>Previous round info:</h4>
+            <p>Draw on block: {{draw_on_block_prev}}</p>
+            {% if paginated_tickets_user_prev %}
+            <table id="your_tickets_prev" class="table table-striped table-condensed" cellspacing="0" width="100%">
+                <thead>
+                    <tr>
+                        <th>Hash</th>
+                        <th>Number</th>
+                        <th>Payout</th>
+                        <th>Payout %</th>
+                    </tr>
+                </thead>
+                <tbody>
+                        {% for ticket in paginated_tickets_user_prev.items %}
+                        <tr>
+                            <td>{{ ticket.ticket_hash }}</td>
+                            <td>{{ ticket.ticket_number }}</td>
+                            <td>{{ ("{0:.8f}".format(ticket.ticket_payout)) }}</td>
+                            <td>{{ ticket.ticket_payout_perc }}</td>
+
+                        </tr>
+                        {% endfor %}
+                </tbody>
+            </table>
+            <ul class="pagination pagination-lg">
+                {% for page in paginated_tickets_user_prev.iter_pages() %}
+                <li><a href="{{url_for('.user', name=name)}}?user_curr_page_prev={{ page }}">{{ page }}</a></li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p>Login or register to view your tickets</p>
+            {% endif %}
+
+        </div>
+        <div id="all_ticket" class="tab-pane fade">
+                <table id="your_tickets_prev" class="table table-striped table-condensed" cellspacing="0" width="100%">
+                <thead>
+                    <tr>
+                        <th>Number</th>
+                    </tr>
+                </thead>
+                <tbody>
+                        {% for ticket in paginated_tickets_all.items %}
+                        <tr>
+                            <td>{{ ticket.ticket_number }}</td>
+                        </tr>
+                        {% endfor %}
+                </tbody>
+            </table>
+            <ul class="pagination pagination-lg">
+                {% for page in paginated_tickets_all.iter_pages() %}
+                    <li><a href="{{url_for('.user', name=name)}}?all_tickets_page={{ page }}">{{ page }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div id="all_ticket_prev" class="tab-pane fade">
+                <h4>Previous round info:</h4>
+                <p>Draw on block: {{ draw_on_block_prev }}</p>
+
+                <table id="your_tickets_prev" class="table table-striped table-condensed" cellspacing="0" width="100%">
+                <thead>
+                    <tr>
+                        <th>Hash</th>
+                        <th>Number</th>
+                        <th>Payout</th>
+                        <th>Payout %</th>
+                    </tr>
+                </thead>
+                <tbody>
+                        {% for ticket in paginated_tickets_all_prev.items %}
+                        <tr>
+                            <td>{{ ticket.ticket_hash }}</td>
+                            <td>{{ ticket.ticket_number }}</td>
+                            <td>{{ ("{0:.8f}".format(ticket.ticket_payout)) }}</td>
+                            <td>{{ ticket.ticket_payout_perc }}</td>
+                        </tr>
+                        {% endfor %}
+                </tbody>
+            </table>
+            <ul class="pagination pagination-lg">
+                {% for page in paginated_tickets_all.iter_pages() %}
+                    <li><a href="{{url_for('.user', name=name)}}?all_tickets_page_prev={{ page }}">{{ page }}</a></li>
+                {% endfor %}
+            </ul>
+
+        </div>
+
+    </div>
+{% endblock %}
